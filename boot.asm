@@ -1,19 +1,28 @@
-ORG 0                ; Set origin to 0 (this should typically be 0x7C00 for bootloaders)
+ORG 0                ; Set origin to 0 (not 0x7C00, but the BIOS loads this at 0x7C00)
 BITS 16              ; Specify 16-bit mode, as the CPU starts in Real Mode
 
-jmp 0x7c0:start      ; makes code segmment to 0x7c0
+_start :
+    jmp short start  ; Jump over the next few bytes (to avoid executing raw data)
+    nop              ; Padding for compatibility with some BIOSes
+
+    times 33 db 0    ; Reserve 33 bytes for the BPB (BIOS Parameter Block)
+                     ; Some BIOSes may overwrite this area, so we add padding
 
 start:
+    jmp 0x7c0:step2  ; Perform a far jump to reset CS (Code Segment) to 0x7C0
+                     ; This ensures that CS is correctly set, preventing corruption
 
-    cli              ; Clear interrupts to prevent unexpected behavior during setup
+step2:
+    cli              ; Disable interrupts to prevent unexpected behavior during setup
     mov ax, 0x7c0    ; Load segment base address (0x7C00 / 16 = 0x7C0) into AX
     mov ds, ax       ; Set Data Segment (DS) to 0x7C0 (where the bootloader is loaded)
     mov es, ax       ; Set Extra Segment (ES) to the same base address
 
     mov ax, 0x00     ; Set up the Stack Segment (SS) to 0x0000 (standard for bootloaders)
     mov ss, ax       ; Load Stack Segment
-    mov sp, 0x7c00   ; Set Stack Pointer (SP) to 0x7C00 (prevents overwriting our code)
-    sti              ; Enable interrupts after setup is complete
+    mov sp, 0x7c00   ; Set Stack Pointer (SP) to 0x7C00 
+                     ; (This prevents the stack from overwriting the bootloader code)
+    sti              ; Re-enable interrupts after setup is complete
 
     mov si, message  ; Load the address of 'message' into SI (source index for string operations)
     call print       ; Call the print function to display the message
