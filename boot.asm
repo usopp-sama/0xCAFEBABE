@@ -37,7 +37,7 @@ print_char:
     int 0x10         ; Call BIOS interrupt to print the character in AL
     ret              ; Return from function
 
-message: db 'My nose. I love you ^._.^', 0  ; Define the message string with a null terminator
+message: db 'My Nigga. I love you ^._.^', 0  ; Define the message string with a null terminator
 
 ; Fill the remaining space with zeros until we reach 510 bytes
 times 510- ($ - $$) db 0 
